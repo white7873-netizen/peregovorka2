@@ -525,6 +525,61 @@
             padding: 12px;
         }
 
+        /* Data management bar */
+        .data-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .data-bar .btn {
+            padding: 8px 14px;
+            font-size: 12px;
+        }
+
+        .data-bar .status {
+            font-size: 12px;
+            color: #6b7280;
+            margin-left: auto;
+        }
+
+        .data-bar .status.saved {
+            color: #4ade80;
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #1e293b;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 12px 20px;
+            font-size: 14px;
+            color: #fff;
+            z-index: 2000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            border-color: rgba(74,222,128,0.3);
+        }
+
+        .toast.error {
+            border-color: rgba(239,68,68,0.3);
+        }
+
         /* Responsive */
         @media (max-width: 600px) {
             .header {
@@ -549,6 +604,16 @@
             .booking-actions {
                 align-self: flex-end;
             }
+
+            .data-bar {
+                justify-content: center;
+            }
+
+            .data-bar .status {
+                margin-left: 0;
+                width: 100%;
+                text-align: center;
+            }
         }
     </style>
 </head>
@@ -568,6 +633,15 @@
     </div>
 
     <div class="container">
+        <!-- Data Management Bar -->
+        <div class="data-bar">
+            <button class="btn btn-secondary" onclick="exportData()">💾 Скачать данные</button>
+            <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📂 Загрузить данные</button>
+            <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+            <button class="btn btn-danger" onclick="clearAllData()" style="font-size:12px; padding:8px 14px;">🗑️ Очистить всё</button>
+            <span class="status" id="saveStatus">💾 Данные сохранены локально</span>
+        </div>
+
         <!-- Date Navigation -->
         <div class="date-nav">
             <button onclick="changeDate(-1)">‹</button>
@@ -665,17 +739,133 @@
         </div>
     </div>
 
+    <!-- Toast notification -->
+    <div class="toast" id="toast"></div>
+
     <script>
         // State
-        let bookings = JSON.parse(localStorage.getItem('meeting-bookings') || '[]');
+        let bookings = [];
         let selectedDate = new Date().toISOString().split('T')[0];
         let editingId = null;
 
+        // Load data from localStorage
+        function loadData() {
+            try {
+                const saved = localStorage.getItem('meeting-room-bookings');
+                if (saved) {
+                    bookings = JSON.parse(saved);
+                }
+            } catch (e) {
+                console.error('Error loading data:', e);
+                bookings = [];
+            }
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            try {
+                localStorage.setItem('meeting-room-bookings', JSON.stringify(bookings));
+                updateSaveStatus();
+            } catch (e) {
+                console.error('Error saving data:', e);
+                showToast('Ошибка сохранения данных!', 'error');
+            }
+        }
+
+        // Update save status indicator
+        function updateSaveStatus() {
+            const status = document.getElementById('saveStatus');
+            const count = bookings.length;
+            status.textContent = `💾 Сохранено записей: ${count}`;
+            status.className = 'status saved';
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type + ' show';
+            setTimeout(() => {
+                toast.className = 'toast';
+            }, 3000);
+        }
+
+        // Export data to JSON file
+        function exportData() {
+            if (bookings.length === 0) {
+                showToast('Нет данных для экспорта', 'error');
+                return;
+            }
+            const data = JSON.stringify(bookings, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'meeting-bookings-' + new Date().toISOString().split('T')[0] + '.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('✅ Данные экспортированы в файл');
+        }
+
+        // Import data from JSON file
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (!Array.isArray(imported)) {
+                        throw new Error('Invalid format');
+                    }
+                    
+                    // Validate structure
+                    const valid = imported.every(b => 
+                        b.id && b.title && b.organizer && b.date && b.startTime && b.endTime
+                    );
+                    
+                    if (!valid) {
+                        throw new Error('Invalid booking structure');
+                    }
+
+                    if (confirm(`Загрузить ${imported.length} записей? Текущие данные будут заменены.`)) {
+                        bookings = imported;
+                        saveData();
+                        render();
+                        showToast(`✅ Загружено ${imported.length} записей`);
+                    }
+                } catch (err) {
+                    showToast('❌ Ошибка: неверный формат файла', 'error');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; // Reset file input
+        }
+
+        // Clear all data
+        function clearAllData() {
+            if (bookings.length === 0) {
+                showToast('Нет данных для удаления', 'error');
+                return;
+            }
+            if (confirm(`Удалить все ${bookings.length} бронирований? Это действие нельзя отменить!`)) {
+                bookings = [];
+                saveData();
+                render();
+                showToast('🗑️ Все данные удалены');
+            }
+        }
+
         // Init
         function init() {
+            loadData();
             document.getElementById('dateInput').value = selectedDate;
             populateTimeSelects();
             render();
+            updateSaveStatus();
         }
 
         function populateTimeSelects() {
@@ -696,9 +886,7 @@
             endSelect.value = '10:00';
         }
 
-        function save() {
-            localStorage.setItem('meeting-bookings', JSON.stringify(bookings));
-        }
+        // save() is now handled by saveData()
 
         function render() {
             updateDateLabel();
@@ -903,8 +1091,9 @@
         function deleteBooking(id) {
             if (confirm('Удалить это бронирование?')) {
                 bookings = bookings.filter(b => b.id !== id);
-                save();
+                saveData();
                 render();
+                showToast('🗑️ Бронирование удалено');
             }
         }
 
@@ -954,9 +1143,10 @@
                 });
             }
 
-            save();
+            saveData();
             closeModal();
             render();
+            showToast(editingId ? '✅ Бронирование обновлено' : '✅ Бронирование создано');
         }
 
         // Start
