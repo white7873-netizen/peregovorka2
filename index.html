@@ -1,97 +1,966 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Планирование переговорной комнаты</title>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Переговорная комната — Планирование</title>
     <style>
-      /* 内联样式确保主题色立即生效，避免闪烁 */
-      html,
-      body {
-        margin: 0;
-        padding: 0;
-        width: 100%;
-        height: 100%;
-      }
-      html.light,
-      html.light body {
-        background-color: #ffffff !important;
-        color: #000000;
-      }
-      html.dark,
-      html.dark body {
-        background-color: #1a1a1a !important;
-        color: #ffffff;
-      }
-    </style>
-    <script>
-      // 在 React 加载前立即设置主题，避免闪烁
-      (function () {
-        const isInIframe = window.self !== window.top;
-
-        function applyThemeToDOM(theme) {
-          document.documentElement.classList.remove("light", "dark");
-          document.documentElement.classList.add(theme);
-          document.documentElement.setAttribute("data-theme", theme);
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        if (isInIframe) {
-          // 监听父窗口主动推送的主题消息
-          window.addEventListener("message", function (event) {
-            if (event.data && typeof event.data.theme === "string") {
-              const theme = event.data.theme;
-              if (theme === "light" || theme === "dark") {
-                applyThemeToDOM(theme);
-              }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-radius: 0 0 16px 16px;
+            margin-bottom: 24px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-icon {
+            width: 40px;
+            height: 40px;
+            background: #3b82f6;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 13px;
+            color: #93c5fd;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .btn-danger {
+            background: rgba(239,68,68,0.2);
+            color: #fca5a5;
+        }
+
+        .btn-danger:hover {
+            background: rgba(239,68,68,0.4);
+        }
+
+        /* Date navigation */
+        .date-nav {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .date-nav button {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .date-nav button:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .date-nav input[type="date"] {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            padding: 8px 16px;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .date-nav input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+        }
+
+        .date-label {
+            font-size: 16px;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+
+        .btn-today {
+            margin-left: auto;
+            padding: 6px 14px;
+            font-size: 13px;
+        }
+
+        /* Timeline */
+        .timeline-section {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .timeline-section h2 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .timeline {
+            position: relative;
+            height: 60px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .timeline-hours {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+
+        .timeline-hour {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            border-left: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .timeline-hour span {
+            position: absolute;
+            top: -20px;
+            left: 2px;
+            font-size: 10px;
+            color: #6b7280;
+        }
+
+        .timeline-booking {
+            position: absolute;
+            top: 4px;
+            bottom: 4px;
+            background: rgba(59,130,246,0.8);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            overflow: hidden;
+        }
+
+        .timeline-booking:hover {
+            background: rgba(96,165,250,0.9);
+        }
+
+        .timeline-booking span {
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .timeline-labels {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 4px;
+        }
+
+        .timeline-labels span {
+            font-size: 10px;
+            color: #6b7280;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 32px;
+            color: #6b7280;
+        }
+
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+        }
+
+        /* Bookings list */
+        .bookings-header {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .booking-card {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            transition: background 0.2s;
+        }
+
+        .booking-card:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .booking-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .booking-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .booking-badge {
+            font-size: 11px;
+            background: rgba(59,130,246,0.2);
+            color: #93c5fd;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+
+        .booking-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 13px;
+            color: #d1d5db;
+            flex-wrap: wrap;
+        }
+
+        .booking-info span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .booking-desc {
+            font-size: 13px;
+            color: #9ca3af;
+            margin-top: 8px;
+        }
+
+        .booking-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .booking-actions button {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: #9ca3af;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .booking-actions button:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+
+        .booking-actions button.delete:hover {
+            background: rgba(239,68,68,0.2);
+            color: #fca5a5;
+        }
+
+        /* Stats */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 16px;
+        }
+
+        .stat-card .label {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .stat-card .value {
+            font-size: 24px;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: #1e293b;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: #9ca3af;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #d1d5db;
+            margin-bottom: 6px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: #fff;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: #6b7280;
+        }
+
+        .form-group textarea {
+            resize: none;
+            height: 80px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .form-error {
+            background: rgba(239,68,68,0.2);
+            border: 1px solid rgba(239,68,68,0.5);
+            color: #fca5a5;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .form-error.active {
+            display: block;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            padding-top: 8px;
+        }
+
+        .modal-footer .btn {
+            flex: 1;
+            justify-content: center;
+            padding: 12px;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .header {
+                flex-direction: column;
+                gap: 12px;
+                text-align: center;
             }
-          });
-        } else {
-          // 非 iframe 环境，使用默认 light 主题
-          applyThemeToDOM("light");
+
+            .date-nav {
+                justify-content: center;
+            }
+
+            .btn-today {
+                margin-left: 0;
+            }
+
+            .booking-top {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .booking-actions {
+                align-self: flex-end;
+            }
         }
-      })();
-    </script>
-      <script>
-      (function () {
-        if (window.self === window.top) return;
-        var reported = {};
-        window.addEventListener("error", function (event) {
-          // 资源加载失败的 error 事件没有 message，此处仅上报 JS 运行时错误
-          if (!event || !event.message) return;
-          var key =
-            event.message + "|" + (event.filename || "") + "|" + (event.lineno || 0);
-          if (reported[key]) return; // 相同错误只上报一次，避免渲染循环刷屏
-          reported[key] = true;
-          try {
-            window.parent.postMessage(
-              {
-                type: "sandbox-runtime-error",
-                payload: {
-                  message: String(event.message).slice(0, 500),
-                  filename: event.filename || "",
-                  lineno: event.lineno || 0,
-                  colno: event.colno || 0,
-                  stack:
-                    event.error && event.error.stack
-                      ? String(event.error.stack).slice(0, 2000)
-                      : ""
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <div class="header-icon">🏢</div>
+            <div>
+                <h1>Переговорная комната</h1>
+                <p>Планирование бронирований</p>
+            </div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal()">
+            ＋ Забронировать
+        </button>
+    </div>
+
+    <div class="container">
+        <!-- Date Navigation -->
+        <div class="date-nav">
+            <button onclick="changeDate(-1)">‹</button>
+            <input type="date" id="dateInput" onchange="onDateChange()">
+            <button onclick="changeDate(1)">›</button>
+            <span class="date-label" id="dateLabel"></span>
+            <button class="btn btn-secondary btn-today" onclick="goToday()">Сегодня</button>
+        </div>
+
+        <!-- Timeline -->
+        <div class="timeline-section">
+            <h2>🕐 Расписание на день</h2>
+            <div class="timeline" id="timeline">
+                <div class="timeline-hours" id="timelineHours"></div>
+            </div>
+            <div class="timeline-labels">
+                <span>08:00</span>
+                <span>10:00</span>
+                <span>12:00</span>
+                <span>14:00</span>
+                <span>16:00</span>
+                <span>18:00</span>
+                <span>20:00</span>
+            </div>
+            <div id="emptyState" class="empty-state" style="display:none;">
+                <div class="icon">📅</div>
+                <p>Нет бронирований на этот день</p>
+                <p style="margin-top:4px; font-size:12px;">Нажмите «Забронировать» чтобы создать</p>
+            </div>
+        </div>
+
+        <!-- Bookings List -->
+        <div class="bookings-header" id="bookingsHeader">📋 Бронирования (0)</div>
+        <div id="bookingsList"></div>
+
+        <!-- Stats -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="label">Всего бронирований</div>
+                <div class="value" id="statCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Занято</div>
+                <div class="value" id="statBusy">0 ч</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Свободно</div>
+                <div class="value" id="statFree">12 ч</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modalTitle">Новое бронирование</h2>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-error" id="formError"></div>
+                <form id="bookingForm" onsubmit="handleSubmit(event)">
+                    <div class="form-group">
+                        <label>Название встречи *</label>
+                        <input type="text" id="inputTitle" placeholder="Например: Планирование спринта">
+                    </div>
+                    <div class="form-group">
+                        <label>Организатор *</label>
+                        <input type="text" id="inputOrganizer" placeholder="Имя организатора">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Начало</label>
+                            <select id="inputStart"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Окончание</label>
+                            <select id="inputEnd"></select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Количество участников</label>
+                        <input type="number" id="inputParticipants" min="1" max="20" value="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Описание</label>
+                        <textarea id="inputDescription" placeholder="Повестка, ссылки, заметки..."></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">Забронировать</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let bookings = JSON.parse(localStorage.getItem('meeting-bookings') || '[]');
+        let selectedDate = new Date().toISOString().split('T')[0];
+        let editingId = null;
+
+        // Init
+        function init() {
+            document.getElementById('dateInput').value = selectedDate;
+            populateTimeSelects();
+            render();
+        }
+
+        function populateTimeSelects() {
+            const startSelect = document.getElementById('inputStart');
+            const endSelect = document.getElementById('inputEnd');
+            startSelect.innerHTML = '';
+            endSelect.innerHTML = '';
+
+            for (let h = 8; h <= 20; h++) {
+                for (let m = 0; m < 60; m += 30) {
+                    if (h === 20 && m > 0) break;
+                    const time = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+                    startSelect.innerHTML += `<option value="${time}">${time}</option>`;
+                    endSelect.innerHTML += `<option value="${time}">${time}</option>`;
                 }
-              },
-              "*"
-            );
-          } catch (e) {
-            /* 上报失败不影响页面运行 */
-          }
-        });
-      })();
+            }
+            startSelect.value = '09:00';
+            endSelect.value = '10:00';
+        }
+
+        function save() {
+            localStorage.setItem('meeting-bookings', JSON.stringify(bookings));
+        }
+
+        function render() {
+            updateDateLabel();
+            renderTimeline();
+            renderBookingsList();
+            renderStats();
+        }
+
+        function updateDateLabel() {
+            const date = new Date(selectedDate + 'T00:00:00');
+            const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+            document.getElementById('dateLabel').textContent = date.toLocaleDateString('ru-RU', options);
+        }
+
+        function getDayBookings() {
+            return bookings
+                .filter(b => b.date === selectedDate)
+                .sort((a, b) => a.startTime.localeCompare(b.startTime));
+        }
+
+        function renderTimeline() {
+            const timeline = document.getElementById('timeline');
+            const hoursContainer = document.getElementById('timelineHours');
+            const emptyState = document.getElementById('emptyState');
+            const dayBookings = getDayBookings();
+
+            // Clear old bookings
+            timeline.querySelectorAll('.timeline-booking').forEach(el => el.remove());
+
+            // Hour markers
+            hoursContainer.innerHTML = '';
+            for (let h = 8; h <= 20; h++) {
+                const div = document.createElement('div');
+                div.className = 'timeline-hour';
+                div.style.left = ((h - 8) / 12 * 100) + '%';
+                hoursContainer.appendChild(div);
+            }
+
+            if (dayBookings.length === 0) {
+                emptyState.style.display = 'block';
+                timeline.style.display = 'none';
+                document.querySelector('.timeline-labels').style.display = 'none';
+            } else {
+                emptyState.style.display = 'none';
+                timeline.style.display = 'block';
+                document.querySelector('.timeline-labels').style.display = 'flex';
+
+                dayBookings.forEach(booking => {
+                    const div = document.createElement('div');
+                    div.className = 'timeline-booking';
+                    div.style.left = getPosition(booking.startTime) + '%';
+                    div.style.width = getWidth(booking.startTime, booking.endTime) + '%';
+                    div.innerHTML = `<span>${booking.title}</span>`;
+                    div.title = `${booking.title} (${booking.startTime} — ${booking.endTime})`;
+                    div.onclick = () => editBooking(booking.id);
+                    timeline.appendChild(div);
+                });
+            }
+        }
+
+        function getPosition(time) {
+            const [h, m] = time.split(':').map(Number);
+            return ((h - 8) * 60 + m) / (12 * 60) * 100;
+        }
+
+        function getWidth(start, end) {
+            const [sh, sm] = start.split(':').map(Number);
+            const [eh, em] = end.split(':').map(Number);
+            const startMin = (sh - 8) * 60 + sm;
+            const endMin = (eh - 8) * 60 + em;
+            return (endMin - startMin) / (12 * 60) * 100;
+        }
+
+        function renderBookingsList() {
+            const list = document.getElementById('bookingsList');
+            const header = document.getElementById('bookingsHeader');
+            const dayBookings = getDayBookings();
+
+            header.textContent = `📋 Бронирования (${dayBookings.length})`;
+            list.innerHTML = '';
+
+            dayBookings.forEach(booking => {
+                const card = document.createElement('div');
+                card.className = 'booking-card';
+                card.innerHTML = `
+                    <div class="booking-top">
+                        <div>
+                            <div class="booking-title">
+                                ${booking.title}
+                                <span class="booking-badge">${booking.participants} ${getParticipantsWord(booking.participants)}</span>
+                            </div>
+                            <div class="booking-info">
+                                <span>🕐 ${booking.startTime} — ${booking.endTime}</span>
+                                <span>👤 ${booking.organizer}</span>
+                                <span style="color:#9ca3af">(${getDuration(booking.startTime, booking.endTime)})</span>
+                            </div>
+                            ${booking.description ? `<div class="booking-desc">${booking.description}</div>` : ''}
+                        </div>
+                        <div class="booking-actions">
+                            <button onclick="editBooking('${booking.id}')" title="Редактировать">✏️</button>
+                            <button class="delete" onclick="deleteBooking('${booking.id}')" title="Удалить">🗑️</button>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        function getParticipantsWord(n) {
+            if (n === 1) return 'участник';
+            if (n >= 2 && n <= 4) return 'участника';
+            return 'участников';
+        }
+
+        function getDuration(start, end) {
+            const [sh, sm] = start.split(':').map(Number);
+            const [eh, em] = end.split(':').map(Number);
+            const diff = (eh * 60 + em) - (sh * 60 + sm);
+            const hours = Math.floor(diff / 60);
+            const mins = diff % 60;
+            if (hours === 0) return `${mins} мин`;
+            if (mins === 0) return `${hours} ч`;
+            return `${hours} ч ${mins} мин`;
+        }
+
+        function renderStats() {
+            const dayBookings = getDayBookings();
+            const totalMinutes = dayBookings.reduce((acc, b) => {
+                const [sh, sm] = b.startTime.split(':').map(Number);
+                const [eh, em] = b.endTime.split(':').map(Number);
+                return acc + ((eh * 60 + em) - (sh * 60 + sm));
+            }, 0);
+            const busyHours = totalMinutes / 60;
+            const freeHours = 12 - busyHours;
+
+            document.getElementById('statCount').textContent = dayBookings.length;
+            document.getElementById('statBusy').textContent = busyHours % 1 === 0 ? busyHours + ' ч' : busyHours.toFixed(1) + ' ч';
+            document.getElementById('statFree').textContent = freeHours % 1 === 0 ? freeHours + ' ч' : freeHours.toFixed(1) + ' ч';
+        }
+
+        // Date navigation
+        function changeDate(delta) {
+            const d = new Date(selectedDate + 'T00:00:00');
+            d.setDate(d.getDate() + delta);
+            selectedDate = d.toISOString().split('T')[0];
+            document.getElementById('dateInput').value = selectedDate;
+            render();
+        }
+
+        function onDateChange() {
+            selectedDate = document.getElementById('dateInput').value;
+            render();
+        }
+
+        function goToday() {
+            selectedDate = new Date().toISOString().split('T')[0];
+            document.getElementById('dateInput').value = selectedDate;
+            render();
+        }
+
+        // Modal
+        function openModal() {
+            editingId = null;
+            document.getElementById('modalTitle').textContent = 'Новое бронирование';
+            document.getElementById('submitBtn').textContent = 'Забронировать';
+            document.getElementById('bookingForm').reset();
+            document.getElementById('inputStart').value = '09:00';
+            document.getElementById('inputEnd').value = '10:00';
+            document.getElementById('inputParticipants').value = 1;
+            hideError();
+            document.getElementById('modalOverlay').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('active');
+            editingId = null;
+        }
+
+        function closeModalOutside(e) {
+            if (e.target === document.getElementById('modalOverlay')) {
+                closeModal();
+            }
+        }
+
+        function editBooking(id) {
+            const booking = bookings.find(b => b.id === id);
+            if (!booking) return;
+
+            editingId = id;
+            document.getElementById('modalTitle').textContent = 'Редактировать бронирование';
+            document.getElementById('submitBtn').textContent = 'Сохранить';
+            document.getElementById('inputTitle').value = booking.title;
+            document.getElementById('inputOrganizer').value = booking.organizer;
+            document.getElementById('inputStart').value = booking.startTime;
+            document.getElementById('inputEnd').value = booking.endTime;
+            document.getElementById('inputParticipants').value = booking.participants;
+            document.getElementById('inputDescription').value = booking.description || '';
+            hideError();
+            document.getElementById('modalOverlay').classList.add('active');
+        }
+
+        function deleteBooking(id) {
+            if (confirm('Удалить это бронирование?')) {
+                bookings = bookings.filter(b => b.id !== id);
+                save();
+                render();
+            }
+        }
+
+        // Form
+        function showError(msg) {
+            const el = document.getElementById('formError');
+            el.textContent = msg;
+            el.classList.add('active');
+        }
+
+        function hideError() {
+            document.getElementById('formError').classList.remove('active');
+        }
+
+        function hasConflict(date, start, end, excludeId) {
+            return bookings.some(b => {
+                if (excludeId && b.id === excludeId) return false;
+                if (b.date !== date) return false;
+                return start < b.endTime && end > b.startTime;
+            });
+        }
+
+        function handleSubmit(e) {
+            e.preventDefault();
+            hideError();
+
+            const title = document.getElementById('inputTitle').value.trim();
+            const organizer = document.getElementById('inputOrganizer').value.trim();
+            const startTime = document.getElementById('inputStart').value;
+            const endTime = document.getElementById('inputEnd').value;
+            const participants = parseInt(document.getElementById('inputParticipants').value) || 1;
+            const description = document.getElementById('inputDescription').value.trim();
+
+            if (!title) { showError('Укажите название встречи'); return; }
+            if (!organizer) { showError('Укажите организатора'); return; }
+            if (startTime >= endTime) { showError('Время начала должно быть раньше времени окончания'); return; }
+            if (hasConflict(selectedDate, startTime, endTime, editingId)) { showError('На это время уже есть бронирование!'); return; }
+
+            if (editingId) {
+                bookings = bookings.map(b => b.id === editingId ? {
+                    ...b, title, organizer, date: selectedDate, startTime, endTime, participants, description
+                } : b);
+            } else {
+                bookings.push({
+                    id: Date.now().toString(),
+                    title, organizer, date: selectedDate, startTime, endTime, participants, description
+                });
+            }
+
+            save();
+            closeModal();
+            render();
+        }
+
+        // Start
+        init();
     </script>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+</body>
 </html>
